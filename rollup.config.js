@@ -4,8 +4,10 @@ import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
+import babel from '@rollup/plugin-babel';
 
 const production = !process.env.ROLLUP_WATCH;
+const isIE11 = true;
 
 function serve() {
 	let server;
@@ -57,6 +59,22 @@ export default {
 			dedupe: ['svelte']
 		}),
 		commonjs(),
+		isIE11 && babel({
+			extensions: ['.js', '.mjs', '.html', '.svelte'],
+			babelHelpers: 'runtime',
+			exclude: ['node_modules/@babel/**', 'node_modules/core-js/**'],
+			presets: [[
+				'@babel/preset-env', {
+					targets: { ie: '11' },
+					useBuiltIns: 'usage',
+					corejs: { "version": 3, "proposals": true }
+				}
+			]],
+			plugins: [
+				'@babel/plugin-syntax-dynamic-import',
+				['@babel/plugin-transform-runtime', { useESModules: true }]
+			]
+		}),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
